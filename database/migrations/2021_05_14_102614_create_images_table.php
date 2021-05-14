@@ -15,8 +15,14 @@ class CreateImagesTable extends Migration
     {
         Schema::create('images', function (Blueprint $table) {
             $table->id();
-            $table->string(column: 'filename');
-            $table->srting(column: 'url');
+            $table->unsignedBigInteger('creator_id');
+            $table->unsignedBigInteger('category_id')->default(1);
+            $table->foreign('creator_id')->references('id')->on('users');
+            $table->foreign('category_id')->references('id')->on('categories');
+            $table->double('price',8,2);
+            
+            $table->string('filename');
+            $table->string('url');
             $table->timestamps();
         });
     }
