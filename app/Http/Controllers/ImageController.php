@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 
 use Illuminate\Http\Request;
 use App\Models\Image;
+use Auth;
 
 
 class ImageController extends Controller
@@ -37,13 +38,17 @@ class ImageController extends Controller
     public function upload(Request $request) {
         $path = $request->file('image')->store('images', 's3');
 
+        $price = $request->input('price');
+        
+        $idUsuario = $request->user()->id;
+        
         $image = Image::create([
-            'creator_id' => 1,
-            'price' => 1.23,
+            'creator_id' => $idUsuario,
+            'price' => $price,
             'filename' => basename($path),
             'url' => Storage::disk('s3')->url($path)
         ]);
 
-        return response()->json(['message' => ['message' => 'Imagen guardada correctamente'], 'code' => 200], 200);
+        return response()->json(['message' => ['message' => $idUsuario], 'code' => 200], 200);
     }
 }

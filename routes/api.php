@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\API\SearchController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,7 +17,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 //----------------- IMAGES
-Route::post('uploadImage', [ImageController::class, 'upload']);
+Route::post('uploadImage', [ImageController::class, 'upload'])->middleware('auth:api');
+
+Route::get('search/getLasts', [SearchController::class, 'getLasts']);
 
 //----------------- AUTH
 Route::post('register', [AuthController::class, 'register']);
