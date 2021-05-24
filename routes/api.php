@@ -19,7 +19,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 //----------------- IMAGES
 Route::post('uploadImage', [ImageController::class, 'upload'])->middleware('auth:api');
 
-Route::get('search/getLasts', [SearchController::class, 'getLasts']);
+Route::get('search/getLastImages', [SearchController::class, 'getLastImages']);
+
+Route::get('search/getCategories', [SearchController::class, 'getCategories']);
 
 //----------------- AUTH
 Route::post('register', [AuthController::class, 'register']);
