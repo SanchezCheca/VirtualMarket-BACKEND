@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\ImageProduct;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Auth;
 
 class AuthController extends Controller
 {
@@ -74,5 +76,42 @@ class AuthController extends Controller
         $accessToken = auth()->user()->createToken('authToken')->accessToken;
 
         return response()->json(['message' => ['user' => auth()->user(), 'access_token' => $accessToken, 'datos_user' => $user], 'code' => 200], 200);
+    }
+
+    /**
+     * Devuelve la información útil para mostrar en perfil de un usuario dado
+     */
+    public function getUserData(Request $request) {
+        $user = User::where('username','LIKE',$request->username)->first();
+        if ($user != null) {
+            //El usuario existe, se recoge la información útil
+            $nImages = ImageProduct::where('creator_id','=',$user->id)->count(); //nº de imagenes subidas por un usuario
+            $userImages = ImageProduct::where('creator_id','=',$user->id)->get();
+
+            //Comprueba si está siguiendo al usuario
+            $isFollowing = false;
+            if (auth('api')->user() && $user->id != auth('api')->user()->id) {
+                //No se trata del usuario que ha iniciado sesión
+                $isFollowing = \DB::select('SELECT * FROM user_following WHERE user_id = ? AND user_following_id = ?', [auth('api')->user()->id,$user->id]);
+                if ($isFollowing != null) {
+                    $isFollowing = true;
+                } else {
+                    $isFollowing = false;
+                }
+            }
+
+            //Prepara el paquete que se mandará al front
+            $userData = [
+                'name' => $user->name,
+                'username' => $user->username,
+                'nImages' => $nImages,
+                'userImages' => $userImages,
+                'isFollowing' => $isFollowing
+            ];
+
+            return response()->json(['message' => ['userData' => $userData], 'code' => 200], 200);
+        } else {
+            return response()->json(['message' => ['message' => 'El usuario no existe'], 'code' => 404], 404);
+        }
     }
 }

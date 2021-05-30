@@ -16,6 +16,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+//----------------- USERS
+Route::post('getUserData', [AuthController::class, 'getUserData']);
+
 //----------------- IMAGES
 Route::post('uploadImage', [ImageController::class, 'upload'])->middleware('auth:api');
 
