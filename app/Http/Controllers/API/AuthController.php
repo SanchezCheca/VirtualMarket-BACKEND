@@ -84,9 +84,9 @@ class AuthController extends Controller
     public function getUserData(Request $request) {
         $user = User::where('username','LIKE',$request->username)->first();
         if ($user != null) {
-            //El usuario existe, se recoge la información útil
+            //EL USUARIO EXISTE, SE RECOGE LA INFORMACIÓN ÚTIL
             $nImages = ImageProduct::where('creator_id','=',$user->id)->count(); //nº de imagenes subidas por un usuario
-            $userImages = ImageProduct::where('creator_id','=',$user->id)->get();
+            $userImages = ImageProduct::where('creator_id','=',$user->id)->get();   //'filenames' de las imágenes del usuario
 
             //Comprueba si está siguiendo al usuario
             $isFollowing = false;
@@ -100,18 +100,72 @@ class AuthController extends Controller
                 }
             }
 
+            //Nº de seguidores
+            $nFollowers = \DB::table('user_following')->where('user_following_id','=',$user->id)->count();
+
+            //Nº de gente a la que sigue
+            $nFollowing = \DB::table('user_following')->where('user_id','=',$user->id)->count();
+
             //Prepara el paquete que se mandará al front
             $userData = [
                 'name' => $user->name,
                 'username' => $user->username,
                 'nImages' => $nImages,
                 'userImages' => $userImages,
-                'isFollowing' => $isFollowing
+                'isFollowing' => $isFollowing,
+                'nFollowers' => $nFollowers,
+                'nFollowing' => $nFollowing
             ];
 
             return response()->json(['message' => ['userData' => $userData], 'code' => 200], 200);
         } else {
             return response()->json(['message' => ['message' => 'El usuario no existe'], 'code' => 404], 404);
+        }
+    }
+
+    /**
+     * El usuario iniciado sigue al usuario cuyo 'username' recibe
+     */
+    public function followUser(Request $request) {
+        $usuarioIniciado = auth('api')->user();
+        if ($usuarioIniciado) {
+            //Ha iniciado sesión, comprueba que no esté siguiendo ya al usuario
+            $userId = User::where('username','LIKE',$request->username)->first()->id;
+            $isFollowing = \DB::select('SELECT * FROM user_following WHERE user_id = ? AND user_following_id = ?', [auth('api')->user()->id,$userId]);
+            if (!$isFollowing) {
+                //No está siguiendo, le sigue
+                \DB::insert('INSERT INTO user_following VALUES (?,?)', [$usuarioIniciado->id, $userId]);
+                return response()->json(['message' => ['message' => 'Correcto'], 'code' => 201], 201);
+            } else {
+                //Ya le está siguiendo
+                return response()->json(['message' => ['message' => 'Ya sigues al usuario'], 'code' => 409], 409);
+            }
+        } else {
+            //No ha iniciado sesión
+            return response()->json(['message' => ['message' => 'No has iniciado sesión'], 'code' => 401], 401);
+        }
+    }
+
+    /**
+     * El usuario iniciado deja de seguir al usuario cuyo 'username' recibe
+     */
+    public function unfollowUser(Request $request) {
+        $usuarioIniciado = auth('api')->user();
+        if ($usuarioIniciado) {
+            //Ha iniciado sesión, comprueba que no esté siguiendo ya al usuario
+            $userId = User::where('username','LIKE',$request->username)->first()->id;
+            $isFollowing = \DB::select('SELECT * FROM user_following WHERE user_id = ? AND user_following_id = ?', [auth('api')->user()->id,$userId]);
+            if (!$isFollowing) {
+                //No está siguiendo al usuario
+                return response()->json(['message' => ['message' => 'No sigues al usuario'], 'code' => 409], 409);
+            } else {
+                //Le está siguiendo, le deja de seguir
+                \DB::delete('DELETE FROM user_following WHERE user_id = ? AND user_following_id = ?', [$usuarioIniciado->id,$userId]);
+                return response()->json(['message' => ['message' => 'Correcto'], 'code' => 201], 201);
+            }
+        } else {
+            //No ha iniciado sesión
+            return response()->json(['message' => ['message' => 'No has iniciado sesión'], 'code' => 401], 401);
         }
     }
 }
