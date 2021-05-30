@@ -20,6 +20,7 @@ class ImageProduct extends Model
         'filename',
         'format',
         'width',
-        'height'
+        'height',
+        'type'
     ];
 }

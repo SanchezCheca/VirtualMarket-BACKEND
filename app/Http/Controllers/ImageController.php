@@ -95,7 +95,8 @@ class ImageController extends Controller
             'filename' => $filename,
             'format' => $format,
             'width' => $width,
-            'height' => $height
+            'height' => $height,
+            'type' => 1
         ]);
 
         //Guarda las etiquetas

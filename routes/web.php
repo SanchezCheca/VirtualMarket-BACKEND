@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\PublicImageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,7 +26,7 @@ Route::get('/test', function() {
 Route::post('/test', [ImageController::class, 'store']);
 Route::get('/test/{image}', 'ImageController@show');
 
-Auth::routes();
-
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+//--------PUBLIC IMAGES
+Route::get('/thumbnail/{filename}', [PublicImageController::class, 'getThumbnail']);
