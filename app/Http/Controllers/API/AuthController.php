@@ -47,12 +47,6 @@ class AuthController extends Controller
      * Checks user or email and password match and returns access_token and user data
      */
     public function login(Request $request) {
-        /*
-        $loginData = $request->validate([
-            'emailorusername' => 'required',
-            'password' => 'required'
-        ]);*/
-
         //Comprueba si existe un nombre de usuario con el dato introducido
         if (User::where('username','LIKE',$request->input('emailorusername'))->count() > 0) {
             //El dato 'emailorusername' corresponde a un nombre de usuario
@@ -76,6 +70,28 @@ class AuthController extends Controller
         $accessToken = auth()->user()->createToken('authToken')->accessToken;
 
         return response()->json(['message' => ['user' => auth()->user(), 'access_token' => $accessToken, 'datos_user' => $user], 'code' => 200], 200);
+    }
+
+    /**
+     * Actualiza la información de un usuario cuyo 'username' recibe por parámetro
+     */
+    public function updateUser($username, Request $request) {
+        //Comprueba que el usuario que ha iniciado sesión es el que va a ser modificado
+        if (auth('api')->user()->username == $request->input('username')) {
+            $username = $request->input('username');
+            $name = $request->input('name');
+            $email = $request->input('email');
+
+            $user = User::where('username','LIKE',$username)->first();
+            $user->name = $name;
+            $user->email = $email;
+            $user->save();
+
+            return response()->json(['message' => ['message' => 'Correcto'], 'code' => 200], 200);
+        } else {
+            //El usuario iniciado no es el que se está intentando actualizar
+            return response()->json(['message' => ['message' => 'No has iniciado sesión'], 'code' => 401], 401);
+        }
     }
 
     /**

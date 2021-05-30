@@ -16,6 +16,11 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+//----------------- AUTH
+Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login']);
+Route::post('updateUser/{username}', [AuthController::class, 'updateUser']);
+
 //----------------- USERS
 Route::post('getUserData', [AuthController::class, 'getUserData']);
 Route::post('followUser', [AuthController::class, 'followUser']);
@@ -23,11 +28,5 @@ Route::post('unfollowUser', [AuthController::class, 'unfollowUser']);
 
 //----------------- IMAGES
 Route::post('uploadImage', [ImageController::class, 'upload'])->middleware('auth:api');
-
 Route::get('search/getLastImages', [SearchController::class, 'getLastImages']);
-
 Route::get('search/getCategories', [SearchController::class, 'getCategories']);
-
-//----------------- AUTH
-Route::post('register', [AuthController::class, 'register']);
-Route::post('login', [AuthController::class, 'login']);
