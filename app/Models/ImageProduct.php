@@ -5,17 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Image extends Model
+class ImageProduct extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $table = 'imageProducts';
+
+    //protected $guarded = [];
 
     protected $fillable = [
         'creator_id',
         'category_id',
         'price',
         'filename',
-        'url'
+        'format',
+        'width',
+        'height',
+        'type'
     ];
 }

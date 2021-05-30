@@ -63,14 +63,14 @@ class AuthController extends Controller
             'email' => $email,
             'password' => $request->input('password')
         ];
-        
+
         if (!auth()->attempt($loginData,true)) {
             return response()->json(['message' => 'La combinación correo/nombre de usuario y contraseña no es correcta. CORREO: ' . $email, 'code' => 400], 400);
         }
 
         $user = User::where('email', '=', $request->input('email'))
                 ->get();
-                
+
         $accessToken = auth()->user()->createToken('authToken')->accessToken;
 
         return response()->json(['message' => ['user' => auth()->user(), 'access_token' => $accessToken, 'datos_user' => $user], 'code' => 200], 200);
