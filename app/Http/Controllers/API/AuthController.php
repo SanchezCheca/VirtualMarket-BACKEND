@@ -116,11 +116,9 @@ class AuthController extends Controller
                 }
             }
 
-            //Nº de seguidores
-            $nFollowers = \DB::table('user_following')->where('user_following_id','=',$user->id)->count();
-
-            //Nº de gente a la que sigue
-            $nFollowing = \DB::table('user_following')->where('user_id','=',$user->id)->count();
+            $nFollowers = \DB::table('user_following')->where('user_following_id','=',$user->id)->count();  //Nº de seguidores
+            $nFollowing = \DB::table('user_following')->where('user_id','=',$user->id)->count(); //Nº de usuarios a los que sigue
+            $profileImage = $user->profileImage;    //Nombre de la imagen de perfil
 
             //Prepara el paquete que se mandará al front
             $userData = [
@@ -130,7 +128,8 @@ class AuthController extends Controller
                 'userImages' => $userImages,
                 'isFollowing' => $isFollowing,
                 'nFollowers' => $nFollowers,
-                'nFollowing' => $nFollowing
+                'nFollowing' => $nFollowing,
+                'profileImage' => $profileImage
             ];
 
             return response()->json(['message' => ['userData' => $userData], 'code' => 200], 200);

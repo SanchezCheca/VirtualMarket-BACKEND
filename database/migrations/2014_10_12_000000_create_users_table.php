@@ -22,6 +22,11 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->integer('rol')->default(0);
             $table->double('balance',8,2)->default(0);
+            $table->string('profileImage')->nullable();
+            $table->text('about')->nullable();
+            $table->string('webpage')->nullable();
+            $table->string('twitter')->nullable();
+            $table->string('instagram')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
