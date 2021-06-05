@@ -30,3 +30,5 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 
 //--------PUBLIC IMAGES
 Route::get('/thumbnail/{filename}', [PublicImageController::class, 'getThumbnail']);
+Route::get('/sample/{filename}', [PublicImageController::class, 'getSample']);
+Route::get('profileImage/{filename}', [PublicImageController::class, 'getProfileImage']);

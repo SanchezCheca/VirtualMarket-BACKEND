@@ -46,9 +46,10 @@ class AuthController extends Controller
      * ---
      * Checks user or email and password match and returns access_token and user data
      */
-    public function login(Request $request) {
+    public function login(Request $request)
+    {
         //Comprueba si existe un nombre de usuario con el dato introducido
-        if (User::where('username','LIKE',$request->input('emailorusername'))->count() > 0) {
+        if (User::where('username', 'LIKE', $request->input('emailorusername'))->count() > 0) {
             //El dato 'emailorusername' corresponde a un nombre de usuario
             $email = User::select('email')->where('username', 'LIKE', $request->input('emailorusername'))->get();
         } else {
@@ -60,12 +61,12 @@ class AuthController extends Controller
             'password' => $request->input('password')
         ];
 
-        if (!auth()->attempt($loginData,true)) {
+        if (!auth()->attempt($loginData, true)) {
             return response()->json(['message' => 'La combinación correo/nombre de usuario y contraseña no es correcta. CORREO: ' . $email, 'code' => 400], 400);
         }
 
         $user = User::where('email', '=', $request->input('email'))
-                ->get();
+            ->get();
 
         $accessToken = auth()->user()->createToken('authToken')->accessToken;
 
@@ -75,40 +76,56 @@ class AuthController extends Controller
     /**
      * Actualiza la información de un usuario cuyo 'username' recibe por parámetro
      */
-    public function updateUser($username, Request $request) {
+    public function updateUser($username, Request $request)
+    {
         //Comprueba que el usuario que ha iniciado sesión es el que va a ser modificado
         if (auth('api')->user()->username == $request->input('username')) {
             $username = $request->input('username');
             $name = $request->input('name');
             $email = $request->input('email');
+            $about = $request->input('about');
 
-            $user = User::where('username','LIKE',$username)->first();
+            //Guarda el archivo de imagen si lo hay
+            $profileImage = null;
+            if ($request->file('image') != null) {
+                $path = $request->file('image')->store('profileImages', 's3');
+                $profileImage = basename($path);
+            }
+
+            $user = User::where('username', 'LIKE', $username)->first();
+            if ($about != 'null') {
+                $user->about = $about;
+            }
             $user->name = $name;
             $user->email = $email;
+            if ($profileImage != null) {
+                $user->profileImage = $profileImage;
+            }
             $user->save();
 
-            return response()->json(['message' => ['message' => 'Correcto'], 'code' => 200], 200);
+            return response()->json(['message' => ['message' => 'Correcto', 'profileImage' => $profileImage], 'code' => 200], 200);
         } else {
             //El usuario iniciado no es el que se está intentando actualizar
-            return response()->json(['message' => ['message' => 'No has iniciado sesión'], 'code' => 401], 401);
+            return response()->json(['message' => ['message' => 'No has iniciado sesión. Username:' . $request->input('username')], 'code' => 401], 401);
         }
     }
 
     /**
      * Devuelve la información útil para mostrar en perfil de un usuario dado
      */
-    public function getUserData(Request $request) {
-        $user = User::where('username','LIKE',$request->username)->first();
+    public function getUserData(Request $request)
+    {
+        $user = User::where('username', 'LIKE', $request->username)->first();
         if ($user != null) {
             //EL USUARIO EXISTE, SE RECOGE LA INFORMACIÓN ÚTIL
-            $nImages = ImageProduct::where('creator_id','=',$user->id)->count(); //nº de imagenes subidas por un usuario
-            $userImages = ImageProduct::where('creator_id','=',$user->id)->get();   //'filenames' de las imágenes del usuario
+            $nImages = ImageProduct::where('creator_id', '=', $user->id)->count(); //nº de imagenes subidas por un usuario
+            $userImages = ImageProduct::where('creator_id', '=', $user->id)->get();   //'filenames' de las imágenes del usuario
 
             //Comprueba si está siguiendo al usuario
             $isFollowing = false;
             if (auth('api')->user() && $user->id != auth('api')->user()->id) {
                 //No se trata del usuario que ha iniciado sesión
-                $isFollowing = \DB::select('SELECT * FROM user_following WHERE user_id = ? AND user_following_id = ?', [auth('api')->user()->id,$user->id]);
+                $isFollowing = \DB::select('SELECT * FROM user_following WHERE user_id = ? AND user_following_id = ?', [auth('api')->user()->id, $user->id]);
                 if ($isFollowing != null) {
                     $isFollowing = true;
                 } else {
@@ -116,9 +133,10 @@ class AuthController extends Controller
                 }
             }
 
-            $nFollowers = \DB::table('user_following')->where('user_following_id','=',$user->id)->count();  //Nº de seguidores
-            $nFollowing = \DB::table('user_following')->where('user_id','=',$user->id)->count(); //Nº de usuarios a los que sigue
+            $nFollowers = \DB::table('user_following')->where('user_following_id', '=', $user->id)->count();  //Nº de seguidores
+            $nFollowing = \DB::table('user_following')->where('user_id', '=', $user->id)->count(); //Nº de usuarios a los que sigue
             $profileImage = $user->profileImage;    //Nombre de la imagen de perfil
+            $about = $user->about;     //Descripción del usuario
 
             //Prepara el paquete que se mandará al front
             $userData = [
@@ -129,7 +147,8 @@ class AuthController extends Controller
                 'isFollowing' => $isFollowing,
                 'nFollowers' => $nFollowers,
                 'nFollowing' => $nFollowing,
-                'profileImage' => $profileImage
+                'profileImage' => $profileImage,
+                'about' => $about
             ];
 
             return response()->json(['message' => ['userData' => $userData], 'code' => 200], 200);
@@ -141,12 +160,13 @@ class AuthController extends Controller
     /**
      * El usuario iniciado sigue al usuario cuyo 'username' recibe
      */
-    public function followUser(Request $request) {
+    public function followUser(Request $request)
+    {
         $usuarioIniciado = auth('api')->user();
         if ($usuarioIniciado) {
             //Ha iniciado sesión, comprueba que no esté siguiendo ya al usuario
-            $userId = User::where('username','LIKE',$request->username)->first()->id;
-            $isFollowing = \DB::select('SELECT * FROM user_following WHERE user_id = ? AND user_following_id = ?', [auth('api')->user()->id,$userId]);
+            $userId = User::where('username', 'LIKE', $request->username)->first()->id;
+            $isFollowing = \DB::select('SELECT * FROM user_following WHERE user_id = ? AND user_following_id = ?', [auth('api')->user()->id, $userId]);
             if (!$isFollowing) {
                 //No está siguiendo, le sigue
                 \DB::insert('INSERT INTO user_following VALUES (?,?)', [$usuarioIniciado->id, $userId]);
@@ -164,18 +184,19 @@ class AuthController extends Controller
     /**
      * El usuario iniciado deja de seguir al usuario cuyo 'username' recibe
      */
-    public function unfollowUser(Request $request) {
+    public function unfollowUser(Request $request)
+    {
         $usuarioIniciado = auth('api')->user();
         if ($usuarioIniciado) {
             //Ha iniciado sesión, comprueba que no esté siguiendo ya al usuario
-            $userId = User::where('username','LIKE',$request->username)->first()->id;
-            $isFollowing = \DB::select('SELECT * FROM user_following WHERE user_id = ? AND user_following_id = ?', [auth('api')->user()->id,$userId]);
+            $userId = User::where('username', 'LIKE', $request->username)->first()->id;
+            $isFollowing = \DB::select('SELECT * FROM user_following WHERE user_id = ? AND user_following_id = ?', [auth('api')->user()->id, $userId]);
             if (!$isFollowing) {
                 //No está siguiendo al usuario
                 return response()->json(['message' => ['message' => 'No sigues al usuario'], 'code' => 409], 409);
             } else {
                 //Le está siguiendo, le deja de seguir
-                \DB::delete('DELETE FROM user_following WHERE user_id = ? AND user_following_id = ?', [$usuarioIniciado->id,$userId]);
+                \DB::delete('DELETE FROM user_following WHERE user_id = ? AND user_following_id = ?', [$usuarioIniciado->id, $userId]);
                 return response()->json(['message' => ['message' => 'Correcto'], 'code' => 201], 201);
             }
         } else {

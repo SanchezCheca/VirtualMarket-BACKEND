@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ImageProduct;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Storage;
@@ -28,6 +29,17 @@ class PublicImageController extends Controller
         $image = ImageProduct::where('filename','LIKE',$filename)->first();
         if ($image) {
             return Storage::disk('s3')->response('samples/' . $image->filename);
+        } else {
+            //Si la imagen solicitada no existe devuelve a otro sitio
+            return redirect('https://github.com/sanchezcheca');
+        }
+    }
+
+    //Devuelve una imagen de perfil
+    public function getProfileImage($filename) {
+        $image = User::where('profileImage','LIKE',$filename)->first();
+        if ($image) {
+            return Storage::disk('s3')->response('profileImages/' . $filename);
         } else {
             //Si la imagen solicitada no existe devuelve a otro sitio
             return redirect('https://github.com/sanchezcheca');
