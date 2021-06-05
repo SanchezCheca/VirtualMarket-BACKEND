@@ -25,6 +25,7 @@ Route::post('updateUser/{username}', [AuthController::class, 'updateUser']);
 Route::post('getUserData', [AuthController::class, 'getUserData']);
 Route::post('followUser', [AuthController::class, 'followUser']);
 Route::post('unfollowUser', [AuthController::class, 'unfollowUser']);
+Route::post('resetPassword', [AuthController::class, 'resetPassword']);
 
 //----------------- IMAGES
 Route::post('uploadImage', [ImageController::class, 'upload'])->middleware('auth:api');

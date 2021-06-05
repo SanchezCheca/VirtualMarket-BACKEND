@@ -204,4 +204,46 @@ class AuthController extends Controller
             return response()->json(['message' => ['message' => 'No has iniciado sesión'], 'code' => 401], 401);
         }
     }
+
+    /**
+     * Cambia la contraseña si coinciden las credenciales
+     */
+    public function resetPassword(Request $request)
+    {
+        $usuarioIniciado = auth('api')->user();
+        if ($usuarioIniciado) {
+            //Comprueba que coincide el nombre de usuario recibido con el usuario que ha iniciado sesión por su token
+            $userDB = User::where('username', 'LIKE', $request->input('username'))->first();
+            if ($userDB->username == $usuarioIniciado->username) {
+                //Se va a cambiar la contraseña de y por el dueño de la cuenta
+                $email = User::select('email')->where('username', 'LIKE', $request->input('username'))->get();
+            } else {
+                //Otro usuario está intentando cambiar la contraseña
+                return response()->json(['message' => ['message' => 'No eres el dueño de la cuenta'], 'code' => 401], 401);
+            }
+
+            //Datos de inicio de sesión con la contraseña actual
+            $loginData = [
+                'email' => $email,
+                'password' => $request->input('currentPassword')
+            ];
+
+            //Comprueba que la contraseña actual es correcta
+            if (auth()->attempt($loginData, true)) {
+                //La contraseña actual es correcta, se cambia
+                $newPassword = \Hash::make($request->input('newPassword'));
+                $userDB->password = $newPassword;
+                $userDB->save();
+
+                return response()->json(['message' => ['message' => 'OK'], 'code' => 201], 201);
+            } else {
+                //La contraseña actual no es correcta
+                return response()->json(['message' => ['message' => 'La contraseña actual no es correcta.'], 'code' => 401], 401);
+            }
+
+        } else {
+            //No ha iniciado sesión o el token no es válido
+            return response()->json(['message' => ['message' => 'No has iniciado sesión'], 'code' => 401], 401);
+        }
+    }
 }
