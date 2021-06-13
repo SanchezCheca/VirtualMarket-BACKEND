@@ -31,3 +31,4 @@ Route::post('resetPassword', [AuthController::class, 'resetPassword']);
 Route::post('uploadImage', [ImageController::class, 'upload'])->middleware('auth:api');
 Route::get('search/getLastImages', [SearchController::class, 'getLastImages']);
 Route::get('search/getCategories', [SearchController::class, 'getCategories']);
+Route::get('search/{search}', [SearchController::class, 'search']);
