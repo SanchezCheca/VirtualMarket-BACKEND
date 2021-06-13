@@ -38,7 +38,7 @@ class SearchController extends Controller
         $resultado = null;
 
         //Recupera las imágenes que contienen como etiqueta el texto $search
-        $resultado = \DB::select('SELECT * FROM imageProducts WHERE id IN (SELECT image_id FROM imageProduct_tag WHERE tag_id IN (SELECT id FROM tags WHERE name LIKE "?"))', [$search]);
+        $resultado = \DB::select('SELECT * FROM imageProducts WHERE id IN (SELECT image_id FROM imageProduct_tag WHERE tag_id IN (SELECT id FROM tags WHERE name LIKE ?))', [$search]);
 
         return response()->json(['code' => 200, 'message' => $resultado]);
     }
