@@ -119,7 +119,7 @@ class AuthController extends Controller
         if ($user != null) {
             //EL USUARIO EXISTE, SE RECOGE LA INFORMACIÓN ÚTIL
             $nImages = ImageProduct::where('creator_id', '=', $user->id)->count(); //nº de imagenes subidas por un usuario
-            $userImages = ImageProduct::where('creator_id', '=', $user->id)->get();   //'filenames' de las imágenes del usuario
+            $userImages = ImageProduct::where('creator_id', '=', $user->id)->orderByDesc('created_at')->get();   //'filenames' de las imágenes del usuario
 
             //Comprueba si está siguiendo al usuario
             $isFollowing = false;
