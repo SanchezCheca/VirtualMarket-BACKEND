@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\ImageProduct;
 use App\Models\Tag;
+use App\Models\User;
 use Auth;
 use Intervention\Image\ImageManagerStatic;
 use Illuminate\Support\Facades\File;
@@ -119,5 +121,29 @@ class ImageController extends Controller
         }
 
         return response()->json(['message' => ['exito' => true, 'message' => 'La imagen se ha guardado correctamente'], 'code' => 200], 200);
+    }
+
+    //Devuelve la información necesaria de una imagen por su nombre de archivo
+    public function getImageByFilename($filename) {
+        $image = ImageProduct::where('filename','LIKE',$filename)->first();
+        if ($image != null) {
+            $creator = User::where('id','=',$image->creator_id)->first();
+            $category = Category::where('id','=',$image->category_id)->first();
+
+            $respuesta = [
+                'filename' => $image->filename,
+                'creatorName' => $creator->name,
+                'creatorUsername' => $creator->username,
+                'categoryName' => $category->name,
+                'price' => $image->price,
+                'format' => $image->format,
+                'width' => $image->width,
+                'height' => $image->height
+            ];
+
+            return response()->json(['message' => $respuesta, 'code' => 200], 200);
+        } else {
+            return response()->json(['message' => 'No se encuentra', 'code' => 404], 404);
+        }
     }
 }
