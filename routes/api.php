@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\CRUDController;
+use App\Http\Controllers\API\PurchasesController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\API\SearchController;
 
@@ -33,3 +35,12 @@ Route::get('search/getLastImages', [SearchController::class, 'getLastImages']);
 Route::get('search/getCategories', [SearchController::class, 'getCategories']);
 Route::get('search/{search}', [SearchController::class, 'search']);
 Route::get('getImage/{filename}', [ImageController::class, 'getImageByFilename']);
+
+//----------------- PURCHASES
+Route::post('purchase', [PurchasesController::class, 'buyProduct']);
+Route::post('download', [PurchasesController::class, 'download']);
+
+//----------------- CRUD
+Route::post('getAllUsersData', [CRUDController::class, 'getAllUsersData']);
+Route::post('updateUserCRUD', [CRUDController::class, 'updateUser']);
+Route::post('removeUser', [CRUDController::class, 'removeUser']);
