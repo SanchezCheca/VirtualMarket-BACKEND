@@ -70,7 +70,9 @@ class AuthController extends Controller
 
         $accessToken = auth()->user()->createToken('authToken')->accessToken;
 
-        return response()->json(['message' => ['user' => auth()->user(), 'access_token' => $accessToken, 'datos_user' => $user], 'code' => 200], 200);
+        $purchasedImages = \DB::select('SELECT filename FROM imageProducts WHERE imageProducts.id IN (SELECT image_id FROM purchases WHERE buyer_id = ?)', [auth()->user()->id]);
+
+        return response()->json(['message' => ['user' => auth()->user(), 'access_token' => $accessToken, 'datos_user' => $user, 'purchasedImages' => $purchasedImages], 'code' => 200], 200);
     }
 
     /**
@@ -119,7 +121,7 @@ class AuthController extends Controller
         if ($user != null) {
             //EL USUARIO EXISTE, SE RECOGE LA INFORMACIÓN ÚTIL
             $nImages = ImageProduct::where('creator_id', '=', $user->id)->count(); //nº de imagenes subidas por un usuario
-            $userImages = ImageProduct::where('creator_id', '=', $user->id)->get();   //'filenames' de las imágenes del usuario
+            $userImages = ImageProduct::where('creator_id', '=', $user->id)->orderByDesc('created_at')->get();   //'filenames' de las imágenes del usuario
 
             //Comprueba si está siguiendo al usuario
             $isFollowing = false;

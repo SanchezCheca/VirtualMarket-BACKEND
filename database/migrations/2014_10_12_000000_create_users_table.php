@@ -21,7 +21,7 @@ class CreateUsersTable extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->integer('rol')->default(0);
-            $table->double('balance',8,2)->default(0);
+            $table->double('balance',8,2)->default(10);
             $table->string('profileImage')->nullable();
             $table->text('about')->nullable();
             $table->string('webpage')->nullable();
