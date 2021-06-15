@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Image;
 use App\Models\ImageProduct;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -43,6 +44,24 @@ class PublicImageController extends Controller
         } else {
             //Si la imagen solicitada no existe devuelve a otro sitio
             return redirect('https://github.com/sanchezcheca');
+        }
+    }
+
+    //Descarga la imagen original si está autorizada
+    public function download($filename) {
+        $image = ImageProduct::where('filename','LIKE',$filename)->first();
+        if ($image && $image->type == 0) {
+            $image->type = 1;
+            $image->save();
+
+
+
+            //Storage::disk('local')->put($image->filename, Storage::disk('s3')->response('images/' . $image->filename));
+            //return response()->download($image->filename)->deleteFileAfterSend(true);
+            return Storage::disk('s3')->download('images/' . $image->filename);
+            //return Response::download(Storage::disk('s3')->response('samples/' . $image->filename));
+        } else {
+            return redirect('https://release.d2uhek8z3i2n0r.amplifyapp.com/');
         }
     }
 }

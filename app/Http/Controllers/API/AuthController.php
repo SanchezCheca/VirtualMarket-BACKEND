@@ -70,7 +70,9 @@ class AuthController extends Controller
 
         $accessToken = auth()->user()->createToken('authToken')->accessToken;
 
-        return response()->json(['message' => ['user' => auth()->user(), 'access_token' => $accessToken, 'datos_user' => $user], 'code' => 200], 200);
+        $purchasedImages = \DB::select('SELECT filename FROM imageProducts WHERE imageProducts.id IN (SELECT image_id FROM purchases WHERE buyer_id = ?)', [auth()->user()->id]);
+
+        return response()->json(['message' => ['user' => auth()->user(), 'access_token' => $accessToken, 'datos_user' => $user, 'purchasedImages' => $purchasedImages], 'code' => 200], 200);
     }
 
     /**

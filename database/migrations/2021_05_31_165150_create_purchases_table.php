@@ -17,11 +17,13 @@ class CreatePurchasesTable extends Migration
             $table->id();
             $table->unsignedBigInteger('buyer_id');
             $table->unsignedBigInteger('seller_id');
+            $table->unsignedBigInteger('image_id');
             $table->double('price',8,2);
             $table->timestamps();
 
             $table->foreign('buyer_id')->references('id')->on('users');
             $table->foreign('seller_id')->references('id')->on('users');
+            $table->foreign('image_id')->references('id')->on('imageProducts');
         });
     }
 
