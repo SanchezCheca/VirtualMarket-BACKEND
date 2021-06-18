@@ -38,7 +38,7 @@ class AuthController extends Controller
         $user = User::create($validatedData);
         $accessToken = $user->createToken('authToken')->accessToken;
 
-        return response()->json(['message' => ['success' => true, 'user' => $user, 'access_token' => $accessToken], 'code' => 201], 201);
+        return response()->json(['message' => ['success' => true, 'user' => $user, 'access_token' => $accessToken, 'message' => 'Se ha creado tu cuenta.'], 'code' => 201], 201);
     }
 
     /**
@@ -62,7 +62,7 @@ class AuthController extends Controller
         ];
 
         if (!auth()->attempt($loginData, true)) {
-            return response()->json(['message' => 'La combinación correo/nombre de usuario y contraseña no es correcta. CORREO: ' . $email, 'code' => 400], 400);
+            return response()->json(['message' => 'La combinación correo/nombre de usuario y contraseña no es correcta.', 'code' => 400], 400);
         }
 
         $user = User::where('email', '=', $request->input('email'))
@@ -70,7 +70,9 @@ class AuthController extends Controller
 
         $accessToken = auth()->user()->createToken('authToken')->accessToken;
 
-        return response()->json(['message' => ['user' => auth()->user(), 'access_token' => $accessToken, 'datos_user' => $user], 'code' => 200], 200);
+        $purchasedImages = \DB::select('SELECT filename FROM imageProducts WHERE imageProducts.id IN (SELECT image_id FROM purchases WHERE buyer_id = ?)', [auth()->user()->id]);
+
+        return response()->json(['message' => ['user' => auth()->user(), 'access_token' => $accessToken, 'datos_user' => $user, 'purchasedImages' => $purchasedImages], 'code' => 200], 200);
     }
 
     /**
@@ -103,7 +105,7 @@ class AuthController extends Controller
             }
             $user->save();
 
-            return response()->json(['message' => ['message' => 'Correcto', 'profileImage' => $profileImage], 'code' => 200], 200);
+            return response()->json(['message' => ['message' => 'Se ha actualizado tu perfil.', 'profileImage' => $profileImage], 'code' => 200], 200);
         } else {
             //El usuario iniciado no es el que se está intentando actualizar
             return response()->json(['message' => ['message' => 'No has iniciado sesión. Username:' . $request->input('username')], 'code' => 401], 401);
@@ -119,7 +121,7 @@ class AuthController extends Controller
         if ($user != null) {
             //EL USUARIO EXISTE, SE RECOGE LA INFORMACIÓN ÚTIL
             $nImages = ImageProduct::where('creator_id', '=', $user->id)->count(); //nº de imagenes subidas por un usuario
-            $userImages = ImageProduct::where('creator_id', '=', $user->id)->get();   //'filenames' de las imágenes del usuario
+            $userImages = ImageProduct::where('creator_id', '=', $user->id)->orderByDesc('created_at')->get();   //'filenames' de las imágenes del usuario
 
             //Comprueba si está siguiendo al usuario
             $isFollowing = false;

@@ -23,7 +23,7 @@ class SearchController extends Controller
      * Devuelve las últimas 30 imágenes de la BD para la portada
      */
     public function getLastImages() {
-        $files = ImageProduct::take(300)->get();
+        $files = ImageProduct::take(300)->orderByDesc('created_at')->get();
         $response = [];
         foreach($files as $file) {
             $response[] = $file;
