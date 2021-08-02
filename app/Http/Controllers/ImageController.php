@@ -70,9 +70,28 @@ class ImageController extends Controller
         //Guarda el archivo original
         $path = $request->file('image')->store('images', 's3');
         $filename = basename($path);
+
+        //Recoge los datos para la BD
+        $format = $request->file('image')->extension();
+        $width = ImageManagerStatic::make($request->file('image'))->width();
+        $height = ImageManagerStatic::make($request->file('image'))->height();
+        $price = $request->input('price');
+        $category = $request->input('category');
+
         //Crea y guarda la imagen de muestra (con marca de agua)
-        $sampleImage = ImageManagerStatic::make($request->file('image'))->insert(('watermark.png'))->save($filename);
+        //Si la imagen es más ancha que larga, ajusta la marca de agua al ancho y viceversa
+        if ($width >= $height) {
+            ImageManagerStatic::make('watermark.png')->resize($width, null, function ($constraint) {
+                $constraint->aspectRatio();
+            })->save('resizedWatermark.png');
+        } else {
+            ImageManagerStatic::make('watermark.png')->resize(null, $height, function ($constraint) {
+                $constraint->aspectRatio();
+            })->save('resizedWatermark.png');
+        }
+        $sampleImage = ImageManagerStatic::make($request->file('image'))->insert(('resizedWatermark.png'))->save($filename);
         Storage::disk('s3')->put('samples/' . $filename, $sampleImage);
+
         //Crea y guarda la miniatura (reducida a un ancho de 612px)
         $thumbnail = ImageManagerStatic::make($request->file('image'))->resize(612, null, function ($constraint) {
             $constraint->aspectRatio();
@@ -81,13 +100,6 @@ class ImageController extends Controller
 
         //Elimina el archivo temporal creado
         File::delete($filename);
-
-        //Recoge los datos para la BD
-        $format = $request->file('image')->extension();
-        $width = ImageManagerStatic::make($request->file('image'))->width();
-        $height = ImageManagerStatic::make($request->file('image'))->height();
-        $price = $request->input('price');
-        $category = $request->input('category');
 
         //Crea el registro en BD
         $image = ImageProduct::create([
@@ -103,10 +115,10 @@ class ImageController extends Controller
 
         //Guarda las etiquetas
         $tags = $request->input('tags');
-        $tagsSinEspacios = str_replace(' ','',$tags);
+        $tagsSinEspacios = str_replace(' ', '', $tags);
         $tagsArray = explode(',', $tagsSinEspacios);
         foreach ($tagsArray as $tag) {
-            $tagActual = Tag::where('name','LIKE',$tag)->first();
+            $tagActual = Tag::where('name', 'LIKE', $tag)->first();
             if ($tagActual == null) {
                 //La etiqueta introducida no existe en BD, se crea
                 $tagActual = Tag::create([
@@ -124,11 +136,12 @@ class ImageController extends Controller
     }
 
     //Devuelve la información necesaria de una imagen por su nombre de archivo
-    public function getImageByFilename($filename) {
-        $image = ImageProduct::where('filename','LIKE',$filename)->first();
+    public function getImageByFilename($filename)
+    {
+        $image = ImageProduct::where('filename', 'LIKE', $filename)->first();
         if ($image != null) {
-            $creator = User::where('id','=',$image->creator_id)->first();
-            $category = Category::where('id','=',$image->category_id)->first();
+            $creator = User::where('id', '=', $image->creator_id)->first();
+            $category = Category::where('id', '=', $image->category_id)->first();
 
             $respuesta = [
                 'filename' => $image->filename,
