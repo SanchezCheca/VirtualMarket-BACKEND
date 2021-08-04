@@ -132,7 +132,7 @@ class ImageController extends Controller
             ]);
         }
 
-        return response()->json(['message' => ['exito' => true, 'message' => 'La imagen se ha guardado correctamente'], 'code' => 200], 200);
+        return response()->json(['message' => ['exito' => true, 'message' => 'La imagen se ha guardado correctamente', 'filename' => $filename], 'code' => 200], 200);
     }
 
     //Devuelve la información necesaria de una imagen por su nombre de archivo
