@@ -7,6 +7,7 @@ use App\Http\Controllers\API\CRUDController;
 use App\Http\Controllers\API\PurchasesController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\API\SearchController;
+use App\Http\Controllers\API\StatsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,3 +45,4 @@ Route::post('download', [PurchasesController::class, 'download']);
 Route::post('getAllUsersData', [CRUDController::class, 'getAllUsersData']);
 Route::post('updateUserCRUD', [CRUDController::class, 'updateUser']);
 Route::post('removeUser', [CRUDController::class, 'removeUser']);
+Route::get('getAdminStats', [StatsController::class, 'getStats']);
