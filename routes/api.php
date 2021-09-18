@@ -45,4 +45,4 @@ Route::post('download', [PurchasesController::class, 'download']);
 Route::post('getAllUsersData', [CRUDController::class, 'getAllUsersData']);
 Route::post('updateUserCRUD', [CRUDController::class, 'updateUser']);
 Route::post('removeUser', [CRUDController::class, 'removeUser']);
-Route::get('getAdminStats', [StatsController::class, 'getStats']);
+Route::post('getAdminStats', [StatsController::class, 'getStats']);
