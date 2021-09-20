@@ -16,17 +16,20 @@ class StatsController extends Controller
         if ($selectedDate == 'today') {
             $date = Carbon::now()->subDays(1);
             $respuesta = $this->getStatsWithDaysLimit($date);
-            $respuesta += ['datosT' => $this->getUploadedImagesToday()];
+            $respuesta += ['datosTImages' => $this->getUploadedImagesToday()];
+            $respuesta += ['datosTPurchases' => $this->getPurchasesToday()];
             return response()->json(['code' => 200, 'message' => $respuesta]);
         } else if ($selectedDate == 'last28') {
             $date = Carbon::now()->subDays(28);
             $respuesta = $this->getStatsWithDaysLimit($date);
-            $respuesta += ['datosT' => $this->getUploadedImagesInLastNDays(28)];
+            $respuesta += ['datosTImages' => $this->getUploadedImagesInLastNDays(28)];
+            $respuesta += ['datosTPurchases' => $this->getPurchasesInLastNDays(28)];
             return response()->json(['code' => 200, 'message' => $respuesta]);
         } else if ($selectedDate == 'last90') {
             $date = Carbon::now()->subDays(90);
             $respuesta = $this->getStatsWithDaysLimit($date);
-            $respuesta += ['datosT' => $this->getUploadedImagesInLastNDays(90)];
+            $respuesta += ['datosTImages' => $this->getUploadedImagesInLastNDays(90)];
+            $respuesta += ['datosTPurchases' => $this->getPurchasesInLastNDays(90)];
             return response()->json(['code' => 200, 'message' => $respuesta]);
         } else if ($selectedDate == 'always') {
             //Nº total de imágenes
@@ -38,7 +41,12 @@ class StatsController extends Controller
             //Cantidad de dinero movido en las compras
             $totalMoneyMoved = Purchase::get()->sum('price');
             //Valor medio de cada compra
-            $averagePurchasePrice = Purchase::get()->sum('price') / Purchase::get()->count();
+            if (Purchase::get()->count() != 0) {
+                $averagePurchasePrice = Purchase::get()->sum('price') / Purchase::get()->count();
+            } else {
+                $averagePurchasePrice = 0;
+            }
+            
             //Cantidad total de todos los monederos
             $totalWalletValue = User::get()->sum('balance');
 
@@ -68,7 +76,11 @@ class StatsController extends Controller
         //Cantidad de dinero movido en las compras
         $totalMoneyMoved = Purchase::where('created_at', '>=', $days)->get()->sum('price');
         //Valor medio de cada compra
-        $averagePurchasePrice = Purchase::where('created_at', '>=', $days)->get()->sum('price') / Purchase::where('created_at', '>=', $days)->get()->count();
+        if (Purchase::where('created_at', '>=', $days)->get()->count() != 0) {
+            $averagePurchasePrice = Purchase::where('created_at', '>=', $days)->get()->sum('price') / Purchase::where('created_at', '>=', $days)->get()->count();            
+        } else {
+            $averagePurchasePrice = 0;
+        }
         //Cantidad total de todos los monederos
         $totalWalletValue = User::get()->sum('balance');
 
@@ -82,6 +94,36 @@ class StatsController extends Controller
         ];
 
         return $respuesta;
+    }
+
+    //Devuelve los datos formateados para la tabla de las compras en el día de hoy
+    private function getPurchasesToday() {
+        $nHoras = Carbon::today()->diff(Carbon::now())->h;
+        $horasT = [];
+        $comprasT = [];
+        
+        for ($i=0; $i < $nHoras; $i++) { 
+            $horasT[] = $i;
+            $comprasT[] = Purchase::where('created_at','>=',(Carbon::today()->addHours($i)))->where('created_at','<',(Carbon::today()->addHours($i + 1)))->count();
+        }
+
+        $datosT = [$horasT,$comprasT];
+
+        return $datosT;
+    }
+
+    //Devuelve los datos formateados para la tabla de las compras en los últimos n días
+    private function getPurchasesInLastNDays($days) {
+        $diasT = [];
+        $comprasT = [];
+
+        for ($i=0; $i < $days; $i++) { 
+            $diasT[] = Carbon::today()->subDays($days - $i)->day . '/' . Carbon::today()->subDays($days - $i)->month;
+            $comprasT[] = Purchase::where('created_at','>=',Carbon::today()->subDays($days - $i))->where('created_at','<=',Carbon::today()->subDays($days - $i - 1))->count();
+        }
+
+        $datosT = [$diasT,$comprasT];
+        return $datosT;
     }
 
     //Devuelve los datos formateados para tabla de las imágenes subidas en el día de hoy
@@ -106,8 +148,8 @@ class StatsController extends Controller
         $imagesT = [];
 
         for ($i=0; $i < $days; $i++) { 
-            $diasT[] = Carbon::now()->subDays($days - $i - 1)->day . '/' . Carbon::now()->subDays($days - $i - 1)->month;
-            $imagesT[] = ImageProduct::where('created_at','>=',Carbon::now()->subDays($days - $i))->where('created_at','<=',Carbon::now()->subDays($days - $i - 1))->count();
+            $diasT[] = Carbon::today()->subDays($days - $i)->day . '/' . Carbon::today()->subDays($days - $i)->month;
+            $imagesT[] = ImageProduct::where('created_at','>=',Carbon::today()->subDays($days - $i))->where('created_at','<=',Carbon::today()->subDays($days - $i - 1))->count();
         }
 
         $datosT = [$diasT,$imagesT];
