@@ -23,7 +23,7 @@ class SearchController extends Controller
      * Devuelve las últimas 30 imágenes de la BD para la portada
      */
     public function getLastImages() {
-        $files = ImageProduct::take(300)->orderByDesc('created_at')->get();
+        $files = ImageProduct::where('status','=',2)->take(300)->orderByDesc('created_at')->get();
         $response = [];
         foreach($files as $file) {
             $response[] = $file;
@@ -38,7 +38,7 @@ class SearchController extends Controller
         $resultado = null;
 
         //Recupera las imágenes que contienen como etiqueta el texto $search
-        $resultado = \DB::select('SELECT * FROM imageProducts WHERE id IN (SELECT image_id FROM imageProduct_tag WHERE tag_id IN (SELECT id FROM tags WHERE name LIKE ?))', [$search]);
+        $resultado = \DB::select('SELECT * FROM imageProducts WHERE id IN (SELECT image_id FROM imageProduct_tag WHERE tag_id IN (SELECT id FROM tags WHERE name LIKE ?)) AND status = 2', [$search]);
 
         return response()->json(['code' => 200, 'message' => $resultado]);
     }

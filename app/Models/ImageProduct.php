@@ -21,6 +21,7 @@ class ImageProduct extends Model
         'format',
         'width',
         'height',
-        'type'
+        'type',
+        'status'
     ];
 }

@@ -25,8 +25,10 @@ class CreateImageProductsTable extends Migration
             $table->integer('width');
             $table->integer('height');
             $table->integer('type');
-
+            $table->unsignedBigInteger('status')->default(1);
             $table->timestamps();
+
+            $table->foreign('status')->references('id')->on('statuses');
         });;
     }
 

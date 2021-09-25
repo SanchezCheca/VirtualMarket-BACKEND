@@ -8,6 +8,7 @@ use App\Http\Controllers\API\PurchasesController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\API\SearchController;
 use App\Http\Controllers\API\StatsController;
+use App\Http\Controllers\API\ModController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,3 +47,6 @@ Route::post('getAllUsersData', [CRUDController::class, 'getAllUsersData']);
 Route::post('updateUserCRUD', [CRUDController::class, 'updateUser']);
 Route::post('removeUser', [CRUDController::class, 'removeUser']);
 Route::post('getAdminStats', [StatsController::class, 'getStats']);
+
+//----------------- MODERATION
+Route::post('getImageToModerate', [ModController::class, 'getImageToModerate']);
