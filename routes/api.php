@@ -50,3 +50,4 @@ Route::post('getAdminStats', [StatsController::class, 'getStats']);
 
 //----------------- MODERATION
 Route::post('getImageToModerate', [ModController::class, 'getImageToModerate']);
+Route::post('voteImage', [ModController::class, 'voteImage']);
