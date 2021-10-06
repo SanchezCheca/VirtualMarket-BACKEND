@@ -9,10 +9,11 @@ use Illuminate\Http\Request;
 use App\Models\ImageProduct;
 use App\Models\Tag;
 use App\Models\User;
+use App\Models\Like;
 use Auth;
 use Intervention\Image\ImageManagerStatic;
 use Illuminate\Support\Facades\File;
-
+use Carbon\Carbon;
 
 class ImageController extends Controller
 {
@@ -136,24 +137,77 @@ class ImageController extends Controller
     }
 
     //Devuelve la información necesaria de una imagen por su nombre de archivo
-    public function getImageByFilename($filename)
+    public function getImageByFilename($filename, Request $request)
     {
         $image = ImageProduct::where('filename', 'LIKE', $filename)->first();
         if ($image != null) {
-            $creator = User::where('id', '=', $image->creator_id)->first();
+            //Información sobre la imagen
             $category = Category::where('id', '=', $image->category_id)->first();
+            $nLikes = Like::where('product_id','=',$image->id)->count();
 
-            $respuesta = [
+            //Lista de etiquetas
+            $tags = '';
+            $tagListDB = \DB::select('SELECT name FROM tags WHERE id IN (SELECT tag_id FROM imageProduct_tag WHERE image_id = ?)', [$image->id]);
+            if (sizeof($tagListDB) > 5) {
+                for ($i=0; $i < 5; $i++) {
+                    if ($i != 4) {
+                        $tags = $tags . $tagListDB[$i]->name . ', ';
+                    } else {
+                        $tags = $tags . $tagListDB[$i]->name;
+                    }
+                }
+            } else {
+                for ($i=0; $i < sizeof($tagListDB); $i++) { 
+                    if ($i != (sizeof($tagListDB) - 1)) {
+                        $tags = $tags . $tagListDB[$i]->name . ', ';
+                    } else {
+                        $tags = $tags . $tagListDB[$i]->name;
+                    }
+                }
+            }
+
+            $formattedImage = [
                 'filename' => $image->filename,
-                'creatorName' => $creator->name,
-                'creatorUsername' => $creator->username,
                 'categoryName' => $category->name,
                 'price' => $image->price,
                 'format' => $image->format,
                 'width' => $image->width,
-                'height' => $image->height
+                'height' => $image->height,
+                'likes' => $nLikes,
+                'created_at' => Carbon::createFromFormat('Y-m-d H:i:s', $image->created_at)->format('d/m/y'),
+                'tags' => $tags
             ];
 
+            //Información sobre el creador
+            $creator = User::where('id', '=', $image->creator_id)->first();
+            $creatorData = [
+                'name' => $creator->name,
+                'username' => $creator->username,
+                'profileImageSrc' => $creator->profileImage
+            ];
+
+            //Información sobre la relación del usuario con la imagen
+            $loggedUser = auth('api')->user();
+            if ($loggedUser) {
+                $hasLiked = Like::where('product_id','=',$image->id)->where('user_id','=',$loggedUser->id)->count() > 0;
+                $isFollowingCreatorBD = \DB::select('SELECT COUNT(*) AS siguiendo FROM user_following WHERE user_id = ? AND user_following_id = ?', [$loggedUser->id,$creator->id]);
+                $isFollowingCreator = $isFollowingCreatorBD[0]->siguiendo > 0;
+
+                $userRelationship = [
+                    'hasLiked' => $hasLiked,
+                    'isFollowingCreator' => $isFollowingCreator
+                ];
+            } else {
+                $userRelationship = null;
+            }
+
+            //Forma la respuesta
+            $respuesta = [
+                'image' => $formattedImage,
+                'creatorData' => $creatorData,
+                'userRelationship' => $userRelationship
+            ];
+            
             return response()->json(['message' => $respuesta, 'code' => 200], 200);
         } else {
             return response()->json(['message' => 'No se encuentra', 'code' => 404], 404);

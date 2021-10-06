@@ -36,7 +36,7 @@ Route::post('uploadImage', [ImageController::class, 'upload'])->middleware('auth
 Route::get('search/getLastImages', [SearchController::class, 'getLastImages']);
 Route::get('search/getCategories', [SearchController::class, 'getCategories']);
 Route::get('search/{search}', [SearchController::class, 'search']);
-Route::get('getImage/{filename}', [ImageController::class, 'getImageByFilename']);
+Route::post('getImage/{filename}', [ImageController::class, 'getImageByFilename']);
 
 //----------------- PURCHASES
 Route::post('purchase', [PurchasesController::class, 'buyProduct']);

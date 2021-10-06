@@ -66,18 +66,22 @@ class ModController extends Controller
 
         //Pasa el objeto imageProduct completo
         $imagen = \DB::select('SELECT * from imageProducts WHERE imageProducts.creator_id != ? AND imageProducts.status = 1 AND imageProducts.id NOT IN (SELECT moderations.product_id FROM moderations WHERE moderations.moderator_id = ?) ORDER BY imageProducts.created_at ASC LIMIT 1;', [$userId,$userId]);
-        $imagen = $imagen[0];
+        if ($imagen) {
+            $imagen = $imagen[0];
 
-        //Añade el NOMBRE del usuario creador a la respuesta
-        $imagen->creatorUsername = User::find($imagen->creator_id)->username;
+            //Añade el NOMBRE del usuario creador a la respuesta
+            $imagen->creatorUsername = User::find($imagen->creator_id)->username;
 
-        //Añade la lista de etiquetas a la respuesta
-        $bdTagList = \DB::select('SELECT name FROM tags WHERE id IN (SELECT tag_id FROM imageProduct_tag WHERE image_id = ?)', [$imagen->id]);
-        $tagList = [];
-        foreach ($bdTagList as $tag) {
-            $tagList[] = $tag->name;
+            //Añade la lista de etiquetas a la respuesta
+            $bdTagList = \DB::select('SELECT name FROM tags WHERE id IN (SELECT tag_id FROM imageProduct_tag WHERE image_id = ?)', [$imagen->id]);
+            $tagList = [];
+            foreach ($bdTagList as $tag) {
+                $tagList[] = $tag->name;
+            }
+            $imagen->tagList = $tagList;
+        } else {
+            $imagen = null;
         }
-        $imagen->tagList = $tagList;
 
         //Añade las estadísticas del usuario con respecto al sistema de moderación
         $userStats = [];
